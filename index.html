@@ -139,8 +139,8 @@
     const RATE_MIN = 3.8789759503;        // 1 CUP = 4 ARS
     const RATE_MAX = 3.8589759503;        //(≥100 CUP)
     const RATE_MLC = 10000 / 11.50; // 1 MLC ≈ 777.7 ARS
-    const RATE_USD = 1600;          // Multiplicador para USD Efectivo
-    const USD_EXTRA = 0.15;         // 10% extra sobre ARS
+    const RATE_USD = 1650;          // Multiplicador para USD Efectivo
+    const USD_EXTRA = 0.15;         // 15% extra sobre ARS
 
     let lastResult = '';
 
@@ -270,8 +270,8 @@
       return;
     }
     const usd = Math.round(num / (RATE_USD * (1 + USD_EXTRA)));
-    out.textContent = `💲 Con ${num.toLocaleString()} ARS recibís aprox. ${usd.toLocaleString()} USD Efectivo.`;
-    lastResult = `Quiero enviar ${num.toLocaleString()} ARS y recibir ${usd.toLocaleString()} USD Efectivo.`;
+    out.textContent = `💲 Con ${num.toLocaleString()} ARS recibís aprox. ${usd.toLocaleString()} USDT.`;
+    lastResult = `Quiero enviar ${num.toLocaleString()} ARS y recibir ${usd.toLocaleString()} USDT.`;
   }
   // USD Efectivo → ARS (directa: ARS = USD * 1.10 * 1500)
   else if (from==='USD' && to==='ARS') {
