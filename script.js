@@ -2,7 +2,10 @@
 let config = null;
 let lastResult = '';
 
-// Cargar configuración al iniciar
+function formatArgentineNumber(num) {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
 async function loadConfig() {
   try {
     const response = await fetch('prices.json');
@@ -17,7 +20,6 @@ async function loadConfig() {
   }
 }
 
-// Inicializar aplicación después de cargar configuración
 function initializeApp() {
   updateDisabledOptions();
   hideResultContainer();
@@ -26,25 +28,21 @@ function initializeApp() {
   document.getElementById('amount').addEventListener('input', formatNumericInput);
 }
 
-// Formatear entrada numérica con comas
 function formatNumericInput(event) {
   const input = event.target;
-  let value = input.value.replace(/,/g, '');
+  let value = input.value.replace(/\./g, '').replace(/,/g, '');
   
-  // Limitar a 9 dígitos
   if (value.length > 9) {
     value = value.slice(0, 9);
   }
   
-  // Formatear con comas cada 3 dígitos
   if (value) {
-    value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   }
   
   input.value = value;
 }
 
-// Actualizar opciones deshabilitadas según selección
 function updateDisabledOptions() {
   const from = document.getElementById('currencyFrom').value;
   const toSelect = document.getElementById('currencyTo');
@@ -62,7 +60,6 @@ function updateDisabledOptions() {
   }
 }
 
-// Ocultar contenedor de resultados inicialmente
 function hideResultContainer() {
   const resultContainer = document.getElementById('resultContainer');
   if (resultContainer) {
@@ -70,7 +67,6 @@ function hideResultContainer() {
   }
 }
 
-// Intercambiar monedas
 function swapCurrencies() {
   const f = document.getElementById('currencyFrom');
   const t = document.getElementById('currencyTo');
@@ -87,7 +83,6 @@ function swapCurrencies() {
   lastResult = '';
 }
 
-// Calcular tasa para CUP según cantidad
 function rateForCup(cup) {
   if (cup <= config.minAmounts.CUP) return config.rates.RATE_MIN;
   if (cup >= config.thresholds.CUP_MAX) return config.rates.RATE_MAX;
@@ -95,12 +90,10 @@ function rateForCup(cup) {
   return config.rates.RATE_MIN + slope * (cup - config.minAmounts.CUP);
 }
 
-// Convertir CUP a ARS
 function cupToArs(cup) {
   return cup * rateForCup(cup);
 }
 
-// Convertir ARS a CUP
 function arsToCup(ars) {
   if (ars >= config.rates.RATE_MAX * config.thresholds.CUP_MAX) {
     return Math.floor(ars / config.rates.RATE_MAX);
@@ -117,7 +110,6 @@ function arsToCup(ars) {
   return mid;
 }
 
-// Función principal de cálculo
 function calculate() {
   if (!config) {
     alert('La configuración aún no se ha cargado. Por favor espera un momento.');
@@ -127,7 +119,7 @@ function calculate() {
   const from = document.getElementById('currencyFrom').value;
   const to = document.getElementById('currencyTo').value;
   const raw = document.getElementById('amount').value;
-  const num = parseFloat(raw.replace(/,/g, ''));
+  const num = parseFloat(raw.replace(/\./g, '').replace(/,/g, ''));
   const out = document.getElementById('resultText');
   const copyBtn = document.getElementById('btnCopiar');
   const feedback = document.getElementById('copyFeedback');
@@ -151,43 +143,39 @@ function calculate() {
     return;
   }
 
-  // ARS → CUP
   if (from === 'ARS' && to === 'CUP') {
     if (num < config.minAmounts.ARS) {
-      out.textContent = `ARS ≥ ${config.minAmounts.ARS.toLocaleString()}.`;
+      out.textContent = `ARS ≥ ${formatArgentineNumber(config.minAmounts.ARS)}.`;
       out.className = 'result result-error';
       return;
     }
     const cup = Math.round(arsToCup(num));
-    out.textContent = `💲 Con ${num.toLocaleString()} ARS recibís aprox. ${cup.toLocaleString()} CUP.`;
+    out.textContent = `💲 Con ${formatArgentineNumber(num)} ARS recibís aprox. ${formatArgentineNumber(cup)} CUP.`;
     out.className = 'result result-success';
-    lastResult = `Quiero enviar ${num.toLocaleString()} ARS y recibir ${cup.toLocaleString()} CUP.`;
+    lastResult = `Quiero enviar ${formatArgentineNumber(num)} ARS y recibir ${formatArgentineNumber(cup)} CUP.`;
   }
-  // CUP → ARS
   else if (from === 'CUP' && to === 'ARS') {
     if (num < config.minAmounts.CUP) {
-      out.textContent = `CUP ≥ ${config.minAmounts.CUP.toLocaleString()}.`;
+      out.textContent = `CUP ≥ ${formatArgentineNumber(config.minAmounts.CUP)}.`;
       out.className = 'result result-error';
       return;
     }
     const ars = Math.round(cupToArs(num));
-    out.textContent = `💲 Recibis aprox. ${num.toLocaleString()} CUP con ${ars.toLocaleString()} ARS.`;
+    out.textContent = `💲 Recibis aprox. ${formatArgentineNumber(num)} CUP con ${formatArgentineNumber(ars)} ARS.`;
     out.className = 'result result-success';
-    lastResult = `Quiero enviar ${ars.toLocaleString()} ARS y recibir ${num.toLocaleString()} CUP.`;
+    lastResult = `Quiero enviar ${formatArgentineNumber(ars)} ARS y recibir ${formatArgentineNumber(num)} CUP.`;
   }
-  // ARS → MLC
   else if (from === 'ARS' && to === 'MLC') {
     if (num < config.minAmounts.ARS) {
-      out.textContent = `ARS ≥ ${config.minAmounts.ARS.toLocaleString()}.`;
+      out.textContent = `ARS ≥ ${formatArgentineNumber(config.minAmounts.ARS)}.`;
       out.className = 'result result-error';
       return;
     }
     const mlc = (num / config.rates.RATE_MLC).toFixed(2);
-    out.textContent = `💲 Con ${num.toLocaleString()} ARS recibís aprox. ${mlc} MLC.`;
+    out.textContent = `💲 Con ${formatArgentineNumber(num)} ARS recibís aprox. ${mlc} MLC.`;
     out.className = 'result result-success';
-    lastResult = `Quiero enviar ${num.toLocaleString()} ARS y recibir ${mlc} MLC.`;
+    lastResult = `Quiero enviar ${formatArgentineNumber(num)} ARS y recibir ${mlc} MLC.`;
   }
-  // MLC → ARS
   else if (from === 'MLC' && to === 'ARS') {
     if (num < config.minAmounts.MLC) {
       out.textContent = `MLC ≥ ${config.minAmounts.MLC}.`;
@@ -195,44 +183,39 @@ function calculate() {
       return;
     }
     const ars = Math.round(num * config.rates.RATE_MLC);
-    out.textContent = `💲 Recibis aprox. ${num} MLC con ${ars.toLocaleString()} ARS.`;
+    out.textContent = `💲 Recibis aprox. ${num} MLC con ${formatArgentineNumber(ars)} ARS.`;
     out.className = 'result result-success';
-    lastResult = `Quiero enviar ${ars.toLocaleString()} ARS y recibir ${num} MLC.`;
+    lastResult = `Quiero enviar ${formatArgentineNumber(ars)} ARS y recibir ${num} MLC.`;
   }
-  // ARS → USD Efectivo
   else if (from === 'ARS' && to === 'USD') {
     if (num < config.minAmounts.ARS) {
-      out.textContent = `ARS ≥ ${config.minAmounts.ARS.toLocaleString()}.`;
+      out.textContent = `ARS ≥ ${formatArgentineNumber(config.minAmounts.ARS)}.`;
       out.className = 'result result-error';
       return;
     }
     const usd = Math.round(num / (config.rates.RATE_USD * (1 + config.rates.USD_EXTRA)));
-    out.textContent = `💲 Con ${num.toLocaleString()} ARS recibís aprox. ${usd.toLocaleString()} USDT.`;
+    out.textContent = `💲 Con ${formatArgentineNumber(num)} ARS recibís aprox. ${formatArgentineNumber(usd)} USDT.`;
     out.className = 'result result-success';
-    lastResult = `Quiero enviar ${num.toLocaleString()} ARS y recibir ${usd.toLocaleString()} USDT.`;
+    lastResult = `Quiero enviar ${formatArgentineNumber(num)} ARS y recibir ${formatArgentineNumber(usd)} USDT.`;
   }
-  // USD Efectivo → ARS
   else if (from === 'USD' && to === 'ARS') {
     const ars = Math.round(num * (1 + config.rates.USD_EXTRA) * config.rates.RATE_USD);
-    out.textContent = `💲 Recibis aprox. ${num.toLocaleString()} USD Efectivo con ${ars.toLocaleString()} ARS.`;
+    out.textContent = `💲 Recibis aprox. ${formatArgentineNumber(num)} USD Efectivo con ${formatArgentineNumber(ars)} ARS.`;
     out.className = 'result result-success';
-    lastResult = `Quiero enviar ${ars.toLocaleString()} ARS y recibir ${num.toLocaleString()} USD Efectivo.`;
+    lastResult = `Quiero enviar ${formatArgentineNumber(ars)} ARS y recibir ${formatArgentineNumber(num)} USD Efectivo.`;
   }
-  // CUP ⇄ MLC bloqueado
   else {
     out.textContent = '⛔ Conversión CUP ⇄ MLC no permitida.';
     out.className = 'result result-error';
     return;
   }
 
-  // Mostrar botón copiar si hay resultado válido
   if (lastResult) {
     resultContainer.style.display = 'block';
     copyBtn.style.display = 'flex';
   }
 }
 
-// Copiar resultado al portapapeles
 async function copyResult() {
   if (!lastResult) {
     alert('No hay resultado para copiar. Calcula primero un monto válido.');
@@ -244,12 +227,10 @@ async function copyResult() {
     const feedback = document.getElementById('copyFeedback');
     const copyBtn = document.getElementById('btnCopiar');
     
-    // Mostrar feedback visual
     feedback.textContent = '¡Copiado al portapapeles!';
     feedback.classList.add('show');
     copyBtn.classList.add('copied');
     
-    // Restaurar después de 2 segundos
     setTimeout(() => {
       feedback.classList.remove('show');
       copyBtn.classList.remove('copied');
@@ -260,7 +241,6 @@ async function copyResult() {
   }
 }
 
-// Enviar a WhatsApp
 function sendToWhatsApp() {
   if (!lastResult) {
     alert('Primero calcula un monto válido antes de enviar.');
@@ -270,7 +250,6 @@ function sendToWhatsApp() {
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(lastResult)}`, '_blank');
 }
 
-// Cargar configuración cuando el DOM esté listo
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', loadConfig);
 } else {
