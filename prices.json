@@ -1,0 +1,17 @@
+{
+  "minAmounts": {
+    "ARS": 10000,
+    "CUP": 2578,
+    "MLC": 12.0
+  },
+  "rates": {
+    "RATE_MIN": 3.8789759503,
+    "RATE_MAX": 3.8589759503,
+    "RATE_MLC": 869.5652173913,
+    "RATE_USD": 1650,
+    "USD_EXTRA": 0.15
+  },
+  "thresholds": {
+    "CUP_MAX": 100000
+  }
+}
