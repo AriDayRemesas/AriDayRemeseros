@@ -1,6 +1,7 @@
 // Configuración cargada desde prices.json
 let config = null;
 let lastResult = '';
+let copyResultValue = '';
 
 function formatArgentineNumber(num) {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -8,11 +9,24 @@ function formatArgentineNumber(num) {
 
 async function loadConfig() {
   try {
-    const response = await fetch('prices.json');
+    const timestamp = new Date().getTime();
+    const savedVersion = localStorage.getItem('pricesVersion');
+    let url = `prices.json?t=${timestamp}`;
+    if (savedVersion) {
+      url += `&v=${savedVersion}`;
+    }
+    
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error('Error al cargar la configuración');
     }
     config = await response.json();
+    
+    if (config.version) {
+      localStorage.setItem('pricesVersion', config.version);
+      console.log('Versión de precios:', config.version);
+    }
+    
     initializeApp();
   } catch (error) {
     console.error('Error cargando configuración:', error);
@@ -81,6 +95,7 @@ function swapCurrencies() {
     resultContainer.style.display = 'none';
   }
   lastResult = '';
+  copyResultValue = '';
 }
 
 function rateForCup(cup) {
@@ -128,6 +143,7 @@ function calculate() {
   out.textContent = '';
   out.className = 'result';
   lastResult = '';
+  copyResultValue = '';
   feedback.classList.remove('show');
   copyBtn.style.display = 'none';
 
@@ -153,6 +169,7 @@ function calculate() {
     out.textContent = `💲 Con ${formatArgentineNumber(num)} ARS recibís aprox. ${formatArgentineNumber(cup)} CUP.`;
     out.className = 'result result-success';
     lastResult = `Quiero enviar ${formatArgentineNumber(num)} ARS y recibir ${formatArgentineNumber(cup)} CUP.`;
+    copyResultValue = `${formatArgentineNumber(cup)} CUP`;
   }
   else if (from === 'CUP' && to === 'ARS') {
     if (num < config.minAmounts.CUP) {
@@ -164,6 +181,7 @@ function calculate() {
     out.textContent = `💲 Recibis aprox. ${formatArgentineNumber(num)} CUP con ${formatArgentineNumber(ars)} ARS.`;
     out.className = 'result result-success';
     lastResult = `Quiero enviar ${formatArgentineNumber(ars)} ARS y recibir ${formatArgentineNumber(num)} CUP.`;
+    copyResultValue = `${formatArgentineNumber(ars)} ARS`;
   }
   else if (from === 'ARS' && to === 'MLC') {
     if (num < config.minAmounts.ARS) {
@@ -175,6 +193,7 @@ function calculate() {
     out.textContent = `💲 Con ${formatArgentineNumber(num)} ARS recibís aprox. ${mlc} MLC.`;
     out.className = 'result result-success';
     lastResult = `Quiero enviar ${formatArgentineNumber(num)} ARS y recibir ${mlc} MLC.`;
+    copyResultValue = `${mlc} MLC`;
   }
   else if (from === 'MLC' && to === 'ARS') {
     if (num < config.minAmounts.MLC) {
@@ -186,6 +205,7 @@ function calculate() {
     out.textContent = `💲 Recibis aprox. ${num} MLC con ${formatArgentineNumber(ars)} ARS.`;
     out.className = 'result result-success';
     lastResult = `Quiero enviar ${formatArgentineNumber(ars)} ARS y recibir ${num} MLC.`;
+    copyResultValue = `${formatArgentineNumber(ars)} ARS`;
   }
   else if (from === 'ARS' && to === 'USD') {
     if (num < config.minAmounts.ARS) {
@@ -197,12 +217,14 @@ function calculate() {
     out.textContent = `💲 Con ${formatArgentineNumber(num)} ARS recibís aprox. ${formatArgentineNumber(usd)} USDT.`;
     out.className = 'result result-success';
     lastResult = `Quiero enviar ${formatArgentineNumber(num)} ARS y recibir ${formatArgentineNumber(usd)} USDT.`;
+    copyResultValue = `${formatArgentineNumber(usd)} USDT`;
   }
   else if (from === 'USD' && to === 'ARS') {
     const ars = Math.round(num * (1 + config.rates.USD_EXTRA) * config.rates.RATE_USD);
     out.textContent = `💲 Recibis aprox. ${formatArgentineNumber(num)} USD Efectivo con ${formatArgentineNumber(ars)} ARS.`;
     out.className = 'result result-success';
     lastResult = `Quiero enviar ${formatArgentineNumber(ars)} ARS y recibir ${formatArgentineNumber(num)} USD Efectivo.`;
+    copyResultValue = `${formatArgentineNumber(ars)} ARS`;
   }
   else {
     out.textContent = '⛔ Conversión CUP ⇄ MLC no permitida.';
@@ -217,13 +239,13 @@ function calculate() {
 }
 
 async function copyResult() {
-  if (!lastResult) {
+  if (!copyResultValue) {
     alert('No hay resultado para copiar. Calcula primero un monto válido.');
     return;
   }
 
   try {
-    await navigator.clipboard.writeText(lastResult);
+    await navigator.clipboard.writeText(copyResultValue);
     const feedback = document.getElementById('copyFeedback');
     const copyBtn = document.getElementById('btnCopiar');
     
@@ -237,7 +259,7 @@ async function copyResult() {
     }, 2000);
   } catch (error) {
     console.error('Error al copiar:', error);
-    alert('No se pudo copiar al portapapeles. Por favor, copia manualmente: ' + lastResult);
+    alert('No se pudo copiar al portapapeles. Por favor, copia manualmente: ' + copyResultValue);
   }
 }
 
