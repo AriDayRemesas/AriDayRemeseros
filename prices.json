@@ -6,9 +6,9 @@
     "MLC": 12.0
   },
   "rates": {
-    "RATE_MIN": 3.2340425532,
+    "RATE_MIN": 3.1666666667,
     "COMMENT": 1520.470,
-    "RATE_MAX": 3.2140425532,
+    "RATE_MAX": 3.1466666667,
     "RATE_MLC": 869.5652173913,
     "RATE_USD": 1650,
     "USD_EXTRA": 0.15
