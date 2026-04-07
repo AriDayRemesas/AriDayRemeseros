@@ -2,13 +2,13 @@
   "version": "1.5",
   "minAmounts": {
     "ARS": 10000,
-    "CUP": 3093,
+    "CUP": 3257,
     "MLC": 12.0
   },
   "rates": {
-    "RATE_MIN": 3.1666666667,
+    "RATE_MIN": 3.07070707,
     "COMMENT": 1520.480,
-    "RATE_MAX": 3.1466666667,
+    "RATE_MAX": 3.05070707,
     "RATE_MLC": 869.5652173913,
     "RATE_USD": 1650,
     "USD_EXTRA": 0.15
